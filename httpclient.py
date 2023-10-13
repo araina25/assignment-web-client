@@ -33,6 +33,7 @@ class HTTPResponse(object):
         self.body = body
 
 class HTTPClient(object):
+
     def get_host_port(self, url):
         parsed_url = urllib.parse.urlparse(url)
         host = parsed_url.hostname
@@ -41,8 +42,8 @@ class HTTPClient(object):
 
     def connect(self, host, port):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.settimeout(10)  # set a timeout of 10 seconds for socket operations
         self.socket.connect((host, port))
-        
 
     def get_code(self, data):
         return int(data.split(" ")[1])
@@ -59,7 +60,6 @@ class HTTPClient(object):
     def close(self):
         self.socket.close()
 
-    # read everything from the socket
     def recvall(self, sock):
         buffer = bytearray()
         done = False
@@ -77,7 +77,6 @@ class HTTPClient(object):
         request = f"GET {url} HTTP/1.1\r\nHost: {host}\r\n\r\n"
         self.sendall(request)
         response = self.recvall(self.socket)
-        self.close()
         code = self.get_code(response)
         body = self.get_body(response)
         return HTTPResponse(code, body)
@@ -89,16 +88,16 @@ class HTTPClient(object):
         request = f"POST {url} HTTP/1.1\r\nHost: {host}\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: {len(body)}\r\n\r\n{body}"
         self.sendall(request)
         response = self.recvall(self.socket)
-        self.close()
         code = self.get_code(response)
         body = self.get_body(response)
         return HTTPResponse(code, body)
 
     def command(self, url, command="GET", args=None):
         if (command == "POST"):
-            return self.POST( url, args )
+            return self.POST(url, args)
         else:
-            return self.GET( url, args )
+            return self.GET(url, args)
+
     
 if __name__ == "__main__":
     client = HTTPClient()
