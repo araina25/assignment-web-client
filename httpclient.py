@@ -85,6 +85,7 @@ class HTTPClient(object):
             code = self.get_code(response)
             body = self.get_body(response)
             self.close()  # Close the socket
+            return HTTPResponse(code, body)
         except socket.timeout:
             return HTTPResponse(408, "Request Timeout")
         except Exception as e:
