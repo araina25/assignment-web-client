@@ -38,17 +38,17 @@ class HTTPClient(object):
         parsed_url = urllib.parse.urlparse(url)
         host = parsed_url.hostname
         port = parsed_url.port if parsed_url.port else 80
-        return host, port
+        return host, port, parsed_url.path
 
     def connect(self, host, port):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.settimeout(30)  # set a timeout of 30 seconds for socket operations
+        self.socket.settimeout(30) 
         self.socket.connect((host, port))
 
     def get_code(self, data):
         return int(data.split(" ")[1])
 
-    def get_headers(self, data):
+    def get_headers(self,data):
         return data.split("\r\n\r\n")[0]
 
     def get_body(self, data):
@@ -72,35 +72,41 @@ class HTTPClient(object):
         return buffer.decode('utf-8')
 
     def GET(self, url, args=None):
-        host, port = self.get_host_port(url)
-        self.connect(host, port)
-        user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.3"
-        request = f"GET {url} HTTP/1.1\r\nHost: {host}\r\nUser-Agent: {user_agent}\r\n\r\n"
-        self.sendall(request)
-        response = self.recvall(self.socket)
-        code = self.get_code(response)
-        body = self.get_body(response)
-        self.close()  # Close the socket
-        return HTTPResponse(code, body)
+        try:
+            host, port, path = self.get_host_port(url)
+            self.connect(host, port)
+            user_agent = "Mozilla/5.0 ..."
+            request = f"GET {path} HTTP/1.1\r\nHost: {host}\r\nUser-Agent: {user_agent}\r\n\r\n"
+            self.sendall(request)
+            response = self.recvall(self.socket)
+            code = self.get_code(response)
+            body = self.get_body(response)
+            self.close()
+            return HTTPResponse(code, body)
+        except socket.timeout:
+            print(f"Timeout when accessing {url}")
+            return HTTPResponse(408, "Request Timeout")
+
 
     def POST(self, url, args=None):
-        host, port = self.get_host_port(url)
+        host, port, path = self.get_host_port(url)
         self.connect(host, port)
         body = urllib.parse.urlencode(args) if args else ""
-        request = f"POST {url} HTTP/1.1\r\nHost: {host}\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: {len(body)}\r\n\r\n{body}"
+        content_length = len(body)
+        request = f"POST {path} HTTP/1.1\r\nHost: {host}\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: {content_length}\r\n\r\n{body}"
         self.sendall(request)
         response = self.recvall(self.socket)
         code = self.get_code(response)
         body = self.get_body(response)
-        self.close()  # Close the socket
+        self.close()
         return HTTPResponse(code, body)
-
 
     def command(self, url, command="GET", args=None):
         if (command == "POST"):
             return self.POST(url, args)
         else:
             return self.GET(url, args)
+
 
     
 if __name__ == "__main__":
