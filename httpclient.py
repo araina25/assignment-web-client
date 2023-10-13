@@ -72,25 +72,16 @@ class HTTPClient(object):
         return buffer.decode('utf-8')
 
     def GET(self, url, args=None):
-        try:
-            host, port = self.get_host_port(url)
-            self.connect(host, port)
-
-            host, port = self.get_host_port(url)
-            self.connect(host, port)
-            user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.3"
-            request = f"GET {url} HTTP/1.1\r\nHost: {host}\r\nUser-Agent: {user_agent}\r\n\r\n"
-            self.sendall(request)
-            response = self.recvall(self.socket)
-            code = self.get_code(response)
-            body = self.get_body(response)
-            self.close()  # Close the socket
-            return HTTPResponse(code, body)
-        except socket.timeout:
-            return HTTPResponse(408, "Request Timeout")
-        except Exception as e:
-            return HTTPResponse(500, str(e))
-        
+        host, port = self.get_host_port(url)
+        self.connect(host, port)
+        user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.3"
+        request = f"GET {url} HTTP/1.1\r\nHost: {host}\r\nUser-Agent: {user_agent}\r\n\r\n"
+        self.sendall(request)
+        response = self.recvall(self.socket)
+        code = self.get_code(response)
+        body = self.get_body(response)
+        self.close()  # Close the socket
+        return HTTPResponse(code, body)
 
     def POST(self, url, args=None):
         host, port = self.get_host_port(url)
