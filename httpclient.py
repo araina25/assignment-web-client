@@ -42,7 +42,7 @@ class HTTPClient(object):
 
     def connect(self, host, port):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.settimeout(10)  # set a timeout of 10 seconds for socket operations
+        self.socket.settimeout(30)  # set a timeout of 10 seconds for socket operations
         self.socket.connect((host, port))
 
     def get_code(self, data):
@@ -74,11 +74,13 @@ class HTTPClient(object):
     def GET(self, url, args=None):
         host, port = self.get_host_port(url)
         self.connect(host, port)
-        request = f"GET {url} HTTP/1.1\r\nHost: {host}\r\n\r\n"
+        user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.3"
+        request = f"GET {url} HTTP/1.1\r\nHost: {host}\r\nUser-Agent: {user_agent}\r\n\r\n"
         self.sendall(request)
         response = self.recvall(self.socket)
         code = self.get_code(response)
         body = self.get_body(response)
+        self.close()  # Close the socket
         return HTTPResponse(code, body)
 
     def POST(self, url, args=None):
@@ -90,7 +92,9 @@ class HTTPClient(object):
         response = self.recvall(self.socket)
         code = self.get_code(response)
         body = self.get_body(response)
+        self.close()  # Close the socket
         return HTTPResponse(code, body)
+
 
     def command(self, url, command="GET", args=None):
         if (command == "POST"):
