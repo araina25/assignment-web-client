@@ -42,7 +42,7 @@ class HTTPClient(object):
 
     def connect(self, host, port):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.settimeout(30)  # set a timeout of 10 seconds for socket operations
+        self.socket.settimeout(30)  # set a timeout of 30 seconds for socket operations
         self.socket.connect((host, port))
 
     def get_code(self, data):
